@@ -186,15 +186,15 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, etaFock=1):
                 
                 for k in range(stepNumber-1, -1, -1): 
                     # Mix modes {H,V} with same time bin (basis change)
-                    BSgate(theta=-pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
-                    BSgate(theta=-pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
+                    BSgate(theta=-pi/4, phi=0) | (q[2*k+1], q[2*k+2])
+                    BSgate(theta=-pi/4, phi=0) | (q[2*k+3], q[2*k+4])
                     
                     # Apply time shift to {V} modes
                     BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
                     
                     # Undo basis change
-                    BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
-                    BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
+                    BSgate(theta=pi/4, phi=0) | (q[2*k+1], q[2*k+2])
+                    BSgate(theta=pi/4, phi=0) | (q[2*k+3], q[2*k+4])
             
             # if even step number, assume aBBO at 0 deg in {H,V} basis
             if stepNumber % 2 == 0:
@@ -208,13 +208,12 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, etaFock=1):
             
             for k in range(nSteps+1): 
                 # Mix modes {H,V} with same time bin (basis change)
-                BSgate(theta=-pi/4, phi=0)  | (q[2*k+1], q[2*k+2])            
+                BSgate(theta=-pi/4, phi=0) | (q[2*k+1], q[2*k+2])            
         
            
         # Apply loss + dark counts to all channels (including herald!)        
-        for i in range(nModes+1):
-
-            ThermalLossChannel(eta, n_noise)     | q[i]
+        # for i in range(nModes+1):
+        #     ThermalLossChannel(eta, n_noise) | q[i]
 
     
     # Run SF engine
