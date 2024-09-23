@@ -14,7 +14,7 @@ max_photons = 2 # maximum number of photons detected
 
 ### Run simulation ###
 
-pn_ideal = computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons)
+pn_ideal = computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise)
 # pn_imperfect = computeWalkOutputWithMM(nSteps, r, alphaSq, eta, gamma, mm, max_photons)
 
 
@@ -31,7 +31,6 @@ oneFolds_ideal = filterProbDict(pn_ideal, num_photons=1)
 # oneFolds_imperfect = filterProbDict(pn_imperfect_H, num_photons=1) 
 
 # look at 2-photon H subspace
-twoFolds_ideal = filterProbDict(pn_ideal, num_photons=2)
 # twoFolds_ideal = filterProbDict(pn_ideal_H, num_photons=2)
 # twoFolds_imperfect = filterProbDict(pn_imperfect_H, num_photons=2) 
 
@@ -54,21 +53,3 @@ plt.legend()
 plt.tight_layout()
 plt.savefig(f'output_nsteps{nSteps}_ngamma{max_photons}_1.png')
 plt.close()
-
-fig, ax = plt.subplots(figsize = (12,8))
-
-ax.bar(np.arange(len(twoFolds_ideal))+0.1, twoFolds_ideal.values(), color='tab:blue',width=0.2, label='Perfect mode overlap')
-
-# ax.bar(np.arange(len(twoFolds_imperfect))-0.1, twoFolds_imperfect.values(), color='tab:orange',width=0.2, label='Imperfect mode overlap')
-
-ax.set_xticks(range(len(twoFolds_ideal)))
-
-ax.set_xticklabels(list(twoFolds_ideal.keys()), rotation=65)
-
-plt.title('Walk output')
-plt.ylabel('Probability')
-plt.xlabel('Detection outcome (t0,t1,t2,...)')
-
-plt.legend()
-plt.tight_layout()
-plt.savefig(f'output_nsteps{nSteps}_ngamma{max_photons}_2.png')
