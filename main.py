@@ -162,8 +162,8 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
     
     '''        
     
-    nModes = nSteps + 1 # Start with {|t0>}. 
-                        # Each subsequent step introduces 1 new mode
+    nModes = 2*nSteps + 1   # Start with {|t0>}. 
+                            # Each subsequent step introduces 2 new modes
                           
     alpha = np.sqrt(alphaSq)
     
@@ -189,10 +189,10 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
             for k in range(stepNumber-1, -1, -1):
                 # Split pump / feedback at first BS
                 theta1 = BS1_scheduler(stepNumber)
-                BSgate(theta=theta1, phi=0) | (q[pump_idx], q[k+3])
+                BSgate(theta=theta1, phi=0) | (q[k+1+stepNumber], q[k+1])
 
                 # Apply time shift to late modes
-                BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+                BSgate(theta=pi/2, phi=gamma) | (q[k+2], q[k+4])
 
                 # Recombine early and late modes at second BS
       
