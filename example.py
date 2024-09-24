@@ -10,7 +10,7 @@ eta = 0.07 # overall efficiency
 gamma = 0 # phase shift between H,V due to group delay in aBBO
 mm = 0.7 # mode matching (HOM visibility)
 n_noise = 5e-6 # dark count prob per pump pulse in each mode
-max_photons = 2 # maximum number of photons detected
+max_photons = 1 # maximum number of photons detected
 
 ### Run simulation ###
 
@@ -51,5 +51,5 @@ plt.xlabel('Detection outcome (t0,t1,t2,...)')
 
 plt.legend()
 plt.tight_layout()
-plt.savefig(f'output_nsteps{nSteps}_ngamma{max_photons}_1.png')
+plt.savefig(f'output_nsteps{nSteps}.png')
 plt.close()

@@ -41,45 +41,6 @@ def generate_photon_outcomes(N, max_photons=2):
     return outcomes
 
 
-# def convolve_probabilities(prob1, prob2, max_photons=2):
-    
-#     '''Helper function to convolve the prob distributions described by 
-#     prob1 and prob2.
-    
-#     Dictionaries have the form: prob1 = { (1,1,1): 0.23 } where 0.23 is the 
-#     probability to measure (1,1,1).
-    
-#     Input
-    
-#     dict prob1:        First prob distb (e.g. completely mode matched case)
-#     dict prob2:        Second prob distb (e.g. completely non-mode matched case)
-#     int max_photons:   Maximum number of photons detectable across the N modes
-    
-    
-#     Output
-    
-#     dict convolved_prob:   Convolution of prob1 and prob2 containing events up
-#                            to max_photons
-
-#     '''
-    
-#     convolved_prob = {}
-
-#     for outcome1, prob1_value in prob1.items():
-#         for outcome2, prob2_value in prob2.items():
-            
-#             # Detection label is given by sum of two labels
-#             convolved_outcome = tuple(sum(x) for x in zip(outcome1, outcome2))
-            
-#             # If total number of photons detected is within max_photons
-#             if sum(convolved_outcome) <= max_photons:
-                
-#                 # add current value of convolved prob to product of prob1 and
-#                 # prob 2 
-#                 convolved_prob[convolved_outcome] = convolved_prob.get(convolved_outcome, 0) + prob1_value * prob2_value
-
-#     return convolved_prob
-
 def normalizeProbDict(p):
     
     '''Helper function which normalizes the prob dictionary p'''
@@ -98,25 +59,22 @@ def filterProbDict(pDict, num_photons=2):
     
     return normalizeProbDict(filtered_probabilities)
 
-# def traceOverHV(pDict):
+def traceOverModes(pDict):
     
-#     '''Helper function which returns two probDicts only containing the
-#     H and V photons subspace by tracing over non-detected photons.'''
+    '''Helper function which returns two probDicts only containing the
+    H and V photons subspace by tracing over non-detected photons.'''
     
-#     H_probabilities = {}
-#     V_probabilities = {}
+    a_probabilities = {}
+    b_probabilities = {}
     
-#     for key, value in pDict.items():
-#         H_outcome = key[::2] # keep every second element starting from idx = 0
-#         V_outcome = key[1::2] # keep every second element starting from idx = 1
+    for key, value in pDict.items():
+        a_outcome = key[::2] # keep every second element starting from idx = 0
+        b_outcome = key[1::2] # keep every second element starting from idx = 1
         
-#         H_probabilities[H_outcome] = H_probabilities.get(H_outcome,0) + value
-#         V_probabilities[V_outcome] = V_probabilities.get(V_outcome,0) + value
+        a_probabilities[a_outcome] = a_probabilities.get(a_outcome,0) + value
+        b_probabilities[b_outcome] = b_probabilities.get(b_outcome,0) + value
     
-#     return normalizeProbDict(H_probabilities) , normalizeProbDict(V_probabilities)
-
-def pump_scheduler(stepNumber):
-    return 2 if stepNumber == 1 else 1
+    return normalizeProbDict(a_probabilities) , normalizeProbDict(b_probabilities)
 
 def BS1_scheduler(stepNumber):
     return -pi/4
@@ -162,8 +120,8 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
     
     '''        
     
-    nModes = 2*nSteps + 1   # Start with {|t0>}. 
-                            # Each subsequent step introduces 2 new modes
+    nModes = 2*nSteps + 1  # Start with {|H;t0>,|V;t0>}. 
+                           # Each subsequent step introduces 2 new modes
                           
     alpha = np.sqrt(alphaSq)
     
@@ -175,42 +133,44 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         
         # Initializing states input to walk
         # Let 0 be the herald mode
-        # Let 1 be the pump mode when its *not* pumping (i.e. empty)
-        # Let 2 be the pump mode when it *is* pumping (i.e. not empty)
         
         # S2gate(r, 0)            | (q[0], q[1])
-        Coherent(alpha)         | q[2]
+        Coherent(alpha)         | q[1]
+        
         
         # Quantum walk 
         
         for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
 
-            pump_idx = pump_scheduler(stepNumber)
-            for k in range(stepNumber-1, -1, -1):
-                # Split pump / feedback at first BS
+            for k in range(stepNumber-1, -1, -1): 
+                # Mix modes {a,b} with same time bin (first beamsplitter)
                 theta1 = BS1_scheduler(stepNumber)
-                BSgate(theta=theta1, phi=0) | (q[k+1+stepNumber], q[k+1])
+                BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+                BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
+                
+                # Apply time shift to {b} modes
+                BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+                
+                # Mix modes {a,b} with same time bin (second beamsplitter)
+                BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+                BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
 
-                # Apply time shift to late modes
-                BSgate(theta=pi/2, phi=gamma) | (q[k+2], q[k+4])
-
-                # Recombine early and late modes at second BS
-      
+                if stepNumber != nSteps:
+                    for j in range(1, 2*stepNumber+2, 2):
+                        Vacuum()  | q[j]
         
            
         # Apply loss + dark counts to all channels (including herald!)        
         for i in range(nModes+1):
-            ThermalLossChannel(eta, n_noise) | q[i]
+            ThermalLossChannel(eta, n_noise)     | q[i]
 
     
     # Run SF engine
     results = eng.run(prog)
     state = results.state
     
-    #mus = state.means()
-    #covs = state.cov()        
     
-    # Compute vacuum, 1-folds, 2-folds
+    # Compute vacuum, 1-folds
     
     pn = {}
     
@@ -226,50 +186,3 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
     
     return pn  
 
-
-
-
-# def computeWalkOutputWithMM(nSteps, r, alphaSq, eta, gamma, mm, max_photons):
-    
-#     '''Function which computes the walk output photon statistics when 
-#     there is imperfect mode matching (i.e. interference visibility) between the
-#     heralded photon and coherent state.
-    
-#     To model mode mismatch, we convolve the photon statistics from two "orthogonal"
-#     (i.e. non-interfering) walks happening simultaenously.
-    
-#     In the first walk (pn_para), we compute pn for a 
-#     heralded photon and coherent state of intensity mm*alpha**2. 
-    
-#     In the second walk (pn_perp), we compute pn for a vacuum input (in place of
-#     the heralded photon) and coherent state of intensity (1-mm)*alpha**2 
-#     [note that we still assume we are waiting for a herald click to get the 
-#     correct relative probs when convolving. But the heralded photon is removed 
-#     from the calculation by introducing 100% loss in that mode].
-    
-#     We then assume that our detectors cannot "tell" from which of the two walks 
-#     the photons came from, and thus convolve their photon statistics. 
-    
-#     Input
-    
-#     int nSteps:      Total number of steps for the walk.
-#     float r:         Squeezing parameter for TMSV source
-#     float alphaSq:   Coherent state intensity / mean photon number
-#     float eta:       Efficiency of setup (applies equal loss before all detectors)
-#     float gamma:     Phase between H and V pol due to BBO
-#     float mm:        Mode overlap, i.e. HOM visibility between alpha and Fock
-#     int max_photons: Max number of photons detected at output of walk.
-#     Output
-    
-#     dict pn_final:   Normalized prob distb containing output walk statistics.
-    
-    
-#     '''    
-    
-    
-#     pn_para = computeWalkOutput(nSteps, r, mm*alphaSq, eta, gamma, max_photons, etaFock=1)
-#     pn_perp = computeWalkOutput(nSteps, r, (1-mm)*alphaSq, eta, gamma, max_photons, etaFock=0)
-        
-#     pn_final = convolve_probabilities(pn_para, pn_perp)
-
-#     return normalizeProbDict(pn_final)
