@@ -1,8 +1,23 @@
 from numpy import exp, sqrt, pi
 import numpy as np
+import matplotlib.pyplot as plt
 
 import strawberryfields as sf
 from strawberryfields.ops import *
+
+
+def utbe_plot(oneFolds_ideal, postfix=''):
+    fig, ax = plt.subplots(figsize = (12,8))
+    ax.bar(np.arange(len(oneFolds_ideal))+0.1, oneFolds_ideal.values(), color='tab:blue',width=0.2, label='Perfect mode overlap')
+    ax.set_xticks(range(len(oneFolds_ideal)))
+    ax.set_xticklabels(list(oneFolds_ideal.keys()), rotation=65)
+    plt.title('Walk output')
+    plt.ylabel('Probability')
+    plt.xlabel('Detection outcome (t0,t1,t2,...)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'output{"_"+postfix if postfix != "" else ""}.png')
+    plt.close()
 
 
 def generate_photon_outcomes(N, max_photons=2):
