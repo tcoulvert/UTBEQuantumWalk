@@ -134,8 +134,8 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # Initializing states input to walk
         # Let 0 be the herald mode
         
-        # S2gate(r, 0)            | (q[0], q[1])
-        Coherent(alpha)         | q[1]
+        # S2gate(r, 0)  | (q[0], q[1])
+        Coherent(alpha)  | q[1]
         
         
         # Quantum walk 
@@ -162,7 +162,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
            
         # Apply loss + dark counts to all channels (including herald!)        
         for i in range(nModes+1):
-            ThermalLossChannel(eta, n_noise)     | q[i]
+            ThermalLossChannel(eta, n_noise)  | q[i]
 
     
     # Run SF engine
