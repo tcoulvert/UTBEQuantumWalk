@@ -135,7 +135,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
     
     '''        
     
-    nModes = 2*nSteps + 1  # Start with {|H;t0>,|V;t0>}. 
+    nModes = 2*nSteps + 2  # Start with {|H;t0>,|V;t0>}. 
                            # Each subsequent step introduces 2 new modes
                           
     alpha = np.sqrt(alphaSq)
@@ -156,28 +156,34 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # Quantum walk 
         
         for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
+            print('='*60)
+            print(f"stepNumber = {stepNumber}")
 
             for k in range(stepNumber-1, -1, -1): 
+                print(f"k = {k}")
                 # Mix modes {a,b} with same time bin (first beamsplitter)
                 theta1 = BS1_scheduler(stepNumber)
+                print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
                 BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
-                BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
                 
                 # Apply time shift to {b} modes
+                print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
                 BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
                 
                 # Mix modes {a,b} with same time bin (second beamsplitter)
+                print(f"BS 2 acts on qubits: ({2*k+1}, {2*k+2})")
+                print(f"BS 2 acts on qubits: ({2*k+3}, {2*k+4})")
                 BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
                 BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
 
-                if stepNumber != nSteps:
-                    for j in range(1, 2*stepNumber+2, 2):
-                        Vacuum()  | q[j]
+            # if stepNumber != nSteps:
+            #     for k in range(1, 2*stepNumber+2, 2):
+            #         Vacuum()  | q[k]
         
            
         # Apply loss + dark counts to all channels (including herald!)        
-        for i in range(nModes+1):
-            ThermalLossChannel(eta, n_noise)  | q[i]
+        # for i in range(nModes+1):
+        #     ThermalLossChannel(eta, n_noise)  | q[i]
 
     
     # Run SF engine
