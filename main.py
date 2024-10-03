@@ -179,7 +179,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
             #     for k in range(1, 2*stepNumber+2, 2):
             #         Vacuum()  | q[k]
         
-           
+        
         # Apply loss + dark counts to all channels (including herald!)        
         # for i in range(nModes+1):
         #     ThermalLossChannel(eta, n_noise)  | q[i]
