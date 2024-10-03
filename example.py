@@ -2,8 +2,8 @@ from main import *
 
 ### Paramaters ###
 
-nSteps = 2 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
-alphaSq = 0.08 # intensity / mean photon number of coherent state
+nSteps = 3 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
+alphaSq = 0.8 # intensity / mean photon number of coherent state
 r = 0.07 # squeezing parameter
 eta = 0.07 # overall efficiency
 gamma = 0 # phase shift between H,V due to group delay in aBBO
@@ -23,9 +23,9 @@ pn_ideal_a, pn_ideal_b = traceOverModes(pn_ideal)
 ### Plotting specific outcomes ###
 
 # look at 1-photon a subspace
-oneFolds_ideal_a = filterProbDict(pn_ideal_a, num_photons=1)
+oneFolds_ideal_a = filterProbDict(pn_ideal_a)
 # look at 1-photon b subspace
-oneFolds_ideal_b = filterProbDict(pn_ideal_b, num_photons=1)
+oneFolds_ideal_b = filterProbDict(pn_ideal_b)
 
 # plot
 utbe_plot(oneFolds_ideal_a, postfix=f'nsteps{nSteps}_a')

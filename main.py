@@ -65,7 +65,7 @@ def normalizeProbDict(p):
     return p
     
 
-def filterProbDict(pDict, num_photons=2):
+def filterProbDict(pDict, num_photons=1):
     
     '''Helper function which returns a normalized probDict only containing the
     num_photons subspace. Useful mainly for plotting.'''
@@ -153,8 +153,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         Coherent(alpha)  | q[1]
         
         
-        # Quantum walk 
-        
+        # Quantum walk
         for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
             print('='*60)
             print(f"stepNumber = {stepNumber}")
@@ -189,6 +188,8 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
     # Run SF engine
     results = eng.run(prog)
     state = results.state
+    print(results)
+    print(state)
     
     
     # Compute vacuum, 1-folds
@@ -204,6 +205,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # click detectors... Should be an okay approx as long as <n> << 1.
         
         pn[allLabels[k]] = state.fock_prob(detLabel)
+        print(state.fock_prob(detLabel))
     
-    return pn  
+    return pn
 
