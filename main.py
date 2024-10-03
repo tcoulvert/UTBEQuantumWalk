@@ -149,8 +149,8 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # Initializing states input to walk
         # Let 0 be the herald mode
         
-        # S2gate(r, 0)  | (q[0], q[1])
-        Coherent(alpha)  | q[1]
+        Fock(1)  | q[1]
+        # Coherent(alpha)  | q[1]
         
         
         # Quantum walk
@@ -164,6 +164,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
                 theta1 = BS1_scheduler(stepNumber)
                 print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
                 BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+                BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
                 
                 # Apply time shift to {b} modes
                 print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
@@ -180,16 +181,15 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
             #         Vacuum()  | q[k]
         
         
-        # Apply loss + dark counts to all channels (including herald!)        
-        # for i in range(nModes+1):
-        #     ThermalLossChannel(eta, n_noise)  | q[i]
+        # # Apply loss + dark counts to all channels (including herald!)        
+        # # for i in range(nModes+1):
+        # #     ThermalLossChannel(eta, n_noise)  | q[i]
 
-    
+    # prog.print()
+    prog.draw_circuit()
     # Run SF engine
     results = eng.run(prog)
     state = results.state
-    print(results)
-    print(state)
     
     
     # Compute vacuum, 1-folds
