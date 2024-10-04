@@ -2,7 +2,7 @@ from main import *
 
 ### Paramaters ###
 
-nSteps = 0 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
+nSteps = 3 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
 alphaSq = 1 # intensity / mean photon number of coherent state
 r = 0.07 # squeezing parameter
 eta = 0.07 # overall efficiency
