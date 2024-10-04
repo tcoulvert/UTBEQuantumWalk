@@ -2,8 +2,8 @@ from main import *
 
 ### Paramaters ###
 
-nSteps = 3 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
-alphaSq = 0.8 # intensity / mean photon number of coherent state
+nSteps = 0 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
+alphaSq = 1 # intensity / mean photon number of coherent state
 r = 0.07 # squeezing parameter
 eta = 0.07 # overall efficiency
 gamma = 0 # phase shift between H,V due to group delay in aBBO

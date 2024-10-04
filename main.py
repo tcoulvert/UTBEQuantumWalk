@@ -48,7 +48,9 @@ def generate_photon_outcomes(N, max_photons=2):
                 outcomes.append(tuple(current_outcome))
             return None
 
+        
         for photons_in_mode in range(min(max_photons + 1, remaining_photons + 1)):
+            print(f"photons in mode = {photons_in_mode}")
             new_outcome = current_outcome + [photons_in_mode]
             generate_outcomes_helper(new_outcome, remaining_photons - photons_in_mode, current_mode + 1)
 
@@ -149,32 +151,34 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # Initializing states input to walk
         # Let 0 be the herald mode
         
-        Fock(1)  | q[1]
+        # Fock(1)  | q[1]
+        # LossChannel(etaFock)  | q[1]
         # Coherent(alpha)  | q[1]
+        S2gate(r, 0)            | (q[0], q[1])
         
         
         # Quantum walk
-        for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
-            print('='*60)
-            print(f"stepNumber = {stepNumber}")
+        # for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
+        #     print('='*60)
+        #     print(f"stepNumber = {stepNumber}")
 
-            for k in range(stepNumber-1, -1, -1): 
-                print(f"k = {k}")
-                # Mix modes {a,b} with same time bin (first beamsplitter)
-                theta1 = BS1_scheduler(stepNumber)
-                print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
-                BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
-                BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
+        #     for k in range(stepNumber-1, -1, -1): 
+        #         print(f"k = {k}")
+        #         # Mix modes {a,b} with same time bin (first beamsplitter)
+        #         theta1 = BS1_scheduler(stepNumber)
+        #         print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
+        #         BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+        #         BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
                 
-                # Apply time shift to {b} modes
-                print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
-                BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+        #         # Apply time shift to {b} modes
+        #         print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
+        #         BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
                 
-                # Mix modes {a,b} with same time bin (second beamsplitter)
-                print(f"BS 2 acts on qubits: ({2*k+1}, {2*k+2})")
-                print(f"BS 2 acts on qubits: ({2*k+3}, {2*k+4})")
-                BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
-                BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
+        #         # Mix modes {a,b} with same time bin (second beamsplitter)
+        #         print(f"BS 2 acts on qubits: ({2*k+1}, {2*k+2})")
+        #         print(f"BS 2 acts on qubits: ({2*k+3}, {2*k+4})")
+        #         BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+        #         BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
 
             # if stepNumber != nSteps:
             #     for k in range(1, 2*stepNumber+2, 2):
@@ -185,8 +189,9 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # # for i in range(nModes+1):
         # #     ThermalLossChannel(eta, n_noise)  | q[i]
 
-    # prog.print()
-    prog.draw_circuit()
+    print('-'*60)
+    prog.print()
+    # prog.draw_circuit()
     # Run SF engine
     results = eng.run(prog)
     state = results.state
@@ -206,6 +211,6 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         
         pn[allLabels[k]] = state.fock_prob(detLabel)
         print(state.fock_prob(detLabel))
-    
+    print(pn)
     return pn
 
