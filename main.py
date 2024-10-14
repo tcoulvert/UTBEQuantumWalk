@@ -150,38 +150,74 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaF
         # Initializing states input to walk
         # Let 0 be the herald mode
         
-        # Fock(1)  | q[1]
-        # LossChannel(etaFock)  | q[1]
-        Coherent(alpha)  | q[1]
-        # S2gate(r, 0)            | (q[0], q[1])
+        # Coherent(alpha)  | q[1]
         
         
+        # # Quantum walk
+        # for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
+        #     print('='*60)
+        #     print(f"stepNumber = {stepNumber}")
+
+        #     for k in range(stepNumber-1, -1, -1): 
+        #         print(f"k = {k}")
+        #         # Mix modes {a,b} with same time bin (first beamsplitter)
+        #         theta1 = BS1_scheduler(stepNumber)
+        #         print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
+        #         BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+        #         # BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
+                
+        #         # Apply time shift to {b} modes
+        #         print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
+        #         BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+                
+        #         # Mix modes {a,b} with same time bin (second beamsplitter)
+        #         print(f"BS 2 acts on qubits: ({2*k+1}, {2*k+2})")
+        #         print(f"BS 2 acts on qubits: ({2*k+3}, {2*k+4})")
+        #         BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+        #         BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
+
+        #     if stepNumber != nSteps and stepNumber > 0:
+        #         for k in range(1, 2*stepNumber+2, 2):
+        #             Vacuum()  | q[k]
+
+        # Initializing states input to walk
+        Coherent(alpha)         | q[1] # Make sure that this mode is the same as the "detection" mode (and start of modes set to vac in QW)
+
         # Quantum walk
-        for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
-            print('='*60)
-            print(f"stepNumber = {stepNumber}")
+        for stepNumber in range(nSteps+1): # stepNumber 0 does nothing... ranges from stepNumber = 0 to nSteps
 
-            for k in range(stepNumber-1, -1, -1): 
-                print(f"k = {k}")
-                # Mix modes {a,b} with same time bin (first beamsplitter)
-                theta1 = BS1_scheduler(stepNumber)
-                print(f"BS 1 acts on qubits: ({2*k+1}, {2*k+2})")
-                BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
-                # BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
-                
+            if stepNumber < nSteps:
+
+              for k in range(0, stepNumber+1, 1):
+                # Mix modes {a,b} with same time bin (basis change)
+                BSgate(theta=-pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+
+              for k in range(stepNumber-1, -1, -1):
                 # Apply time shift to {b} modes
-                print(f"time shift acts on qubits: ({2*k+2}, {2*k+4})")
                 BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
-                
-                # Mix modes {a,b} with same time bin (second beamsplitter)
-                print(f"BS 2 acts on qubits: ({2*k+1}, {2*k+2})")
-                print(f"BS 2 acts on qubits: ({2*k+3}, {2*k+4})")
-                BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
-                BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
 
-            if stepNumber != nSteps and stepNumber > 0:
-                for k in range(1, 2*stepNumber+2, 2):
-                    Vacuum()  | q[k]
+              for k in range(0, stepNumber+1, 1):
+                # Undo basis change, back to {a,b}
+                BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+
+              for k in range(stepNumber-1, -1, -1): ##this is the only part I don't currently understand... seems I need to fill vac from bottom up???
+              #for k in range(0, stepNumber+1, 1):
+                Vac          | q[2*k+1]
+                Vac          | q[2*k+3]
+
+            if stepNumber == nSteps:
+
+              for k in range(0, stepNumber+1, 1):
+                # Mix modes {a,b} with same time bin (basis change)
+                BSgate(theta=-pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+
+              for k in range(stepNumber-1, -1, -1):
+                # Apply time shift to {b} modes
+                BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+
+              for k in range(0, stepNumber+1, 1):
+                # Undo basis change, back to {a,b}
+                BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
         
         
         # Apply loss + dark counts to all channels (including herald!)        
