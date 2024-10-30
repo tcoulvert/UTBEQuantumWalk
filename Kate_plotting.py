@@ -24,16 +24,58 @@ fig, (ax1,ax2) = plt.subplots(2)
 #ax1.plot(histDataArray2[0,:])
 #ax2.plot(histDataArray1[0,:])
 
-ax1.plot(histIndexArray2[0,:],np.sum(histDataArray2,axis=0))
-ax2.plot(histIndexArray1[0,:],np.sum(histDataArray1,axis=0))
+# ax1.plot(histIndexArray2[0,:],np.sum(histDataArray2,axis=0))
+# ax2.plot(histIndexArray1[0,:],np.sum(histDataArray1,axis=0))
+ax1.plot(range(len(np.sum(histDataArray2,axis=0)))[2350:2400], np.sum(histDataArray2,axis=0)[2350:2400])
+ax2.plot(range(len(np.sum(histDataArray1,axis=0)))[310:450], np.sum(histDataArray1,axis=0)[310:450])
+# step1 #
+# timebin1 idx ≈ 1015 until 1032, timebin2 idx ≈ 1088 until 1104
+# step2 #
+# timebin1 idx ≈ 2231 until 2253, timebin2 idx ≈ 2307 until 2322, timebin3 idx ≈ 2378 until 2400
+# step3 #
+# timebin1 idx ≈ 149 until 163, timebin2 ≈ 220 until 238, timebin3 idx ≈ 290 until 310, timebin4 idx ≈ ????
+# step4 #
+# timebin1 idx ≈  until , timebin2 idx ≈ 
 
-ax1.set_xlim([10000,50000])
-ax2.set_xlim([20000,70000])
+# ax1.set_xlim([10000,50000])
+# ax2.set_xlim([20000,70000])
 
-ax1.set_ylim([0,22000])
-ax2.set_ylim([0,800])
+# ax1.set_ylim([0,22000])
+# ax2.set_ylim([0,800])
 
 plt.savefig('test.png')
+
+# print(f"timestamp array: {np.shape(timestampArray)}")
+# print(f"index array 1: {np.shape(histIndexArray1)}")
+# print(f"hist array 1: {np.shape(histDataArray1)}")
+# print(f"index array 2: {np.shape(histIndexArray2)}")
+# print(f"hist array 2: {np.shape(histDataArray2)}")
+
+# print(f"timestamp array [0]: {timestampArray[0]}")
+# print(f"index array 1 [0]: {histIndexArray1[0]}")
+# print(f"hist array 1 [0]: {histDataArray1[0]}")
+# print(f"index array 2 [0]: {histIndexArray2[0]}")
+# print(f"hist array 2 [0]: {histDataArray2[0]}")
+
+qw_steps_1and2 = np.sum(histDataArray2, axis=0)
+qw_steps_3and4 = np.sum(histDataArray1, axis=0)
+print(f"QW steps 1&2: {qw_steps_1and2}")
+print(f"QW steps 1&2: {qw_steps_3and4}")
+
+# print(np.mean(qw_steps_1and2[:50]))
+
+# fig, (ax1,ax2) = plt.subplots(2)
+
+# ax1.stairs(qw_steps_3and4)
+# ax2.hist(qw_steps_1and2, density=True)
+
+# ax1.set_xlim([10000,50000])
+# ax2.set_xlim([20000,70000])
+
+# # ax1.set_ylim([0,22000])
+# # ax2.set_ylim([0,800])
+
+# plt.savefig('test2.png')
 
 
 '''
