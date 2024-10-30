@@ -1,3 +1,5 @@
+import os
+
 from numpy import exp, sqrt, pi
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +8,7 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 
 
-def utbe_plot(oneFolds_ideal, postfix=''):
+def utbe_plot(oneFolds_ideal, plot_destdir, postfix=''):
     fig, ax = plt.subplots(figsize = (12,8))
     ax.bar(np.arange(len(oneFolds_ideal))+0.1, oneFolds_ideal.values(), color='tab:blue',width=0.2, label='Perfect mode overlap')
     ax.set_xticks(range(len(oneFolds_ideal)))
@@ -16,7 +18,7 @@ def utbe_plot(oneFolds_ideal, postfix=''):
     plt.xlabel('Detection outcome (t0,t1,t2,...)')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f'output{"_"+postfix if postfix != "" else ""}.png')
+    plt.savefig(os.path.join(plot_destdir, f'output{"_"+postfix if postfix != "" else ""}.png'))
     plt.close()
 
 
@@ -91,12 +93,9 @@ def traceOverModes(pDict):
         b_probabilities[b_outcome] = b_probabilities.get(b_outcome,0) + value
     
     return normalizeProbDict(a_probabilities) , normalizeProbDict(b_probabilities)
-
-def BS1_scheduler(stepNumber):
-    return -pi/4
     
 
-def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, etaFock=1):
+def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, BS1_scheduler, etaFock=1):
     
     '''Main function which computes the walk output photon statistics, 
     including most experimental imperfections. Uses strawberryfields in the 
