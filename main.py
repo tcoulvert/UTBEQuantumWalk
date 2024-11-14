@@ -8,9 +8,29 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 
 
-def utbe_plot(oneFolds_ideal, plot_destdir, postfix=''):
+def utbe_plot_list(oneFolds_ideal, plot_destdir, postfix='', yerr=None, labels=None):
     fig, ax = plt.subplots(figsize = (12,8))
-    ax.bar(np.arange(len(oneFolds_ideal))+0.1, oneFolds_ideal.values(), color='tab:blue',width=0.2, label='Perfect mode overlap')
+    ax.bar(
+       np.arange(len(oneFolds_ideal))+0.1, oneFolds_ideal, yerr=yerr,
+       color='tab:blue', width=0.2
+    )
+    ax.set_xticks(range(len(oneFolds_ideal)))
+    ax.set_xticklabels(labels, rotation=65)
+    plt.title('Walk output')
+    plt.ylabel('Probability')
+    plt.xlabel('Detection outcome (t0,t1,t2,...)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(plot_destdir, f'output{"_"+postfix if postfix != "" else ""}.png'))
+    plt.close()
+    
+def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix=''):
+    fig, ax = plt.subplots(figsize = (12,8))
+    ax.bar(
+       np.arange(len(oneFolds_ideal))+0.1, 
+       oneFolds_ideal.values(), 
+       color='tab:blue', width=0.2
+    )
     ax.set_xticks(range(len(oneFolds_ideal)))
     ax.set_xticklabels(list(oneFolds_ideal.keys()), rotation=65)
     plt.title('Walk output')
@@ -95,7 +115,7 @@ def traceOverModes(pDict):
     return normalizeProbDict(a_probabilities) , normalizeProbDict(b_probabilities)
     
 
-def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, BS1_scheduler, etaFock=1):
+def computeWalkOutput(nSteps, r, alphaSq, eta, max_photons, n_noise, BS1_scheduler, gamma_scheduler, etaFock=1):
     
     '''Main function which computes the walk output photon statistics, 
     including most experimental imperfections. Uses strawberryfields in the 
@@ -162,7 +182,7 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, gamma, max_photons, n_noise, BS1_
 
             for k in range(stepNumber-1, -1, -1):
               # Apply time shift to {b} modes
-              BSgate(theta=pi/2, phi=gamma) | (q[2*k+2], q[2*k+4])
+              BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
 
             for k in range(0, stepNumber+1, 1):
               # Undo basis change, back to {a,b}
