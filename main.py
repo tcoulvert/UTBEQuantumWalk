@@ -184,16 +184,17 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, max_photons, n_noise, BS1_schedul
               # Apply time shift to {b} modes
               BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
 
-            for k in range(0, stepNumber+1, 1):
-              # Undo basis change, back to {a,b}
-              BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+            if stepNumber != nSteps:
+                for k in range(0, stepNumber+1, 1):
+                    # Undo basis change, back to {a,b}
+                    BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
 
 
-            if stepNumber < nSteps:
-              for k in range(stepNumber-1, -1, -1): ##this is the only part I don't currently understand... seems I need to fill vac from bottom up???
-              #for k in range(0, stepNumber+1, 1):
-                Vac          | q[2*k+1]
-                Vac          | q[2*k+3]
+            # if stepNumber < nSteps:
+            #   for k in range(stepNumber-1, -1, -1): ##this is the only part I don't currently understand... seems I need to fill vac from bottom up???
+            #   #for k in range(0, stepNumber+1, 1):
+            #     Vac          | q[2*k+1]
+            #     Vac          | q[2*k+3]
         
         
         # Apply loss + dark counts to all channels (including herald!)        
