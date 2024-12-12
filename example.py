@@ -12,7 +12,7 @@ def gamma_scheduler(stepNumber, rng=np.random.default_rng(seed=None)):
     # return np.pi * rng.random()
 
 ### Paramaters ###
-nSteps = 5 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
+nSteps = 10 # number of steps for walk. Sequence for walk is aBBO 45 deg -> 0 deg -> 45 deg ->...                  
 alphaSq = 0.08 # intensity / mean photon number of coherent state
 r = 0.12 # squeezing parameter
 eta = 1 # overall efficiency
@@ -38,9 +38,18 @@ oneFolds_ideal_a = filterProbDict(pn_ideal_a)
 oneFolds_ideal_b = filterProbDict(pn_ideal_b)
 
 # plot
-plot_destdir = os.path.join(str(Path().absolute()), f'plots/theta{BS1_scheduler(-1):.2f}_gamma0.0/nsteps{nSteps}/')
+plot_destdir = os.path.join(str(Path().absolute()), f'new_plots/theta{BS1_scheduler(-1):.2f}_gamma0.0/nsteps{nSteps}/')
 if not os.path.exists(plot_destdir):
     os.makedirs(plot_destdir)
 utbe_plot_dict(oneFolds_ideal_a, plot_destdir, postfix=f'nsteps{nSteps}_a')
 utbe_plot_dict(oneFolds_ideal_b, plot_destdir, postfix=f'nsteps{nSteps}_b')
+
+H_arr = np.loadtxt("hardware_output/fastAxisHistogram.csv", delimiter=",")
+V_arr = np.loadtxt("hardware_output/slowAxisHistogram.csv", delimiter=",")
+
+plt.figure()
+plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
+plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
+plt.yscale('log')
+plt.savefig('output_fig_from_data.png')
 

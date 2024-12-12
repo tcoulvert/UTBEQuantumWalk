@@ -8,7 +8,7 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 
 
-def utbe_plot_list(oneFolds_ideal, plot_destdir, postfix='', yerr=None, labels=None):
+def utbe_plot_list(oneFolds_ideal, plot_destdir, postfix='', yerr=None, labels=None, log=False):
     fig, ax = plt.subplots(figsize = (12,8))
     ax.bar(
        np.arange(len(oneFolds_ideal))+0.1, oneFolds_ideal, yerr=yerr,
@@ -19,12 +19,14 @@ def utbe_plot_list(oneFolds_ideal, plot_destdir, postfix='', yerr=None, labels=N
     plt.title('Walk output')
     plt.ylabel('Probability')
     plt.xlabel('Detection outcome (t0,t1,t2,...)')
+    if log:
+        plt.yscale('log')
     plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(plot_destdir, f'output{"_"+postfix if postfix != "" else ""}.png'))
     plt.close()
     
-def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix=''):
+def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix='', log=False):
     fig, ax = plt.subplots(figsize = (12,8))
     ax.bar(
        np.arange(len(oneFolds_ideal))+0.1, 
@@ -36,6 +38,8 @@ def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix=''):
     plt.title('Walk output')
     plt.ylabel('Probability')
     plt.xlabel('Detection outcome (t0,t1,t2,...)')
+    if log:
+        plt.yscale('log')
     plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(plot_destdir, f'output{"_"+postfix if postfix != "" else ""}.png'))
@@ -173,28 +177,57 @@ def computeWalkOutput(nSteps, r, alphaSq, eta, max_photons, n_noise, BS1_schedul
         Coherent(alpha)         | q[1] # Make sure that this mode is the same as the "detection" mode (and start of modes set to vac in QW)
 
         # Quantum walk
-        for stepNumber in range(1, nSteps+1): # stepNumber 0 does nothing... ranges from stepNumber = 0 to nSteps
+        # for stepNumber in range(1, nSteps+1): # stepNumber 0 does nothing... ranges from stepNumber = 0 to nSteps
 
-            for k in range(0, stepNumber+1, 1):
-              # Mix modes {a,b} with same time bin (basis change)
-              theta1 = BS1_scheduler(stepNumber)
-              BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+        #     for k in range(0, stepNumber+1, 1):
+        #       # Mix modes {a,b} with same time bin (basis change)
+        #       theta1 = BS1_scheduler(stepNumber)
+        #       BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
 
-            for k in range(stepNumber-1, -1, -1):
-              # Apply time shift to {b} modes
-              BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
+        #     for k in range(stepNumber-1, -1, -1):
+        #       # Apply time shift to {b} modes
+        #       BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
 
-            if stepNumber != nSteps:
-                for k in range(0, stepNumber+1, 1):
-                    # Undo basis change, back to {a,b}
+        #     for k in range(0, stepNumber+1, 1):
+        #         # Undo basis change, back to {a,b}
+        #         BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
+
+        #     if stepNumber < nSteps:
+        #       for k in range(stepNumber-1, -1, -1): ##this is the only part I don't currently understand... seems I need to fill vac from bottom up???
+        #       #for k in range(0, stepNumber+1, 1):
+        #         Vac          | q[2*k+1]
+        #         Vac          | q[2*k+3]
+        for stepNumber in range(nSteps+1): # stepNumber 0 does nothing...
+            
+            # if odd step number, assume aBBO at 45 deg in {H,V} basis
+            if stepNumber % 2 == 1: 
+                
+                for k in range(stepNumber-1, -1, -1): 
+                    # Mix modes {H,V} with same time bin (basis change)
+                    theta1 = BS1_scheduler(stepNumber)
+                    BSgate(theta=theta1, phi=0)  | (q[2*k+1], q[2*k+2])
+                    BSgate(theta=theta1, phi=0)  | (q[2*k+3], q[2*k+4])
+                    
+                    # Apply time shift to {V} modes
+                    BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
+                    
+                    # Undo basis change
                     BSgate(theta=pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
-
-
-            # if stepNumber < nSteps:
-            #   for k in range(stepNumber-1, -1, -1): ##this is the only part I don't currently understand... seems I need to fill vac from bottom up???
-            #   #for k in range(0, stepNumber+1, 1):
-            #     Vac          | q[2*k+1]
-            #     Vac          | q[2*k+3]
+                    BSgate(theta=pi/4, phi=0)  | (q[2*k+3], q[2*k+4])
+            
+            # if even step number, assume aBBO at 0 deg in {H,V} basis
+            if stepNumber % 2 == 0:
+                
+                for k in range(stepNumber-1, -1, -1):       
+                    # Apply time shift to {V} modes
+                    BSgate(theta=pi/2, phi=gamma_scheduler(stepNumber)) | (q[2*k+2], q[2*k+4])
+        
+        # mimic a HWP operation when ending walk on aBBO 45 deg                              
+        if nSteps % 2 == 1: 
+            
+            for k in range(nSteps+1): 
+                # Mix modes {H,V} with same time bin (basis change)
+                BSgate(theta=-pi/4, phi=0)  | (q[2*k+1], q[2*k+2])
         
         
         # Apply loss + dark counts to all channels (including herald!)        
