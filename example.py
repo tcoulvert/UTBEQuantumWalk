@@ -48,17 +48,27 @@ def gamma_scheduler(stepNumber, rng=np.random.default_rng(seed=None)):
 H_arr = np.loadtxt("hardware_output/fastAxisHistogram.csv", delimiter=",")
 V_arr = np.loadtxt("hardware_output/slowAxisHistogram.csv", delimiter=",")
 
+slice_number = 40
+
+# time-bin window = 1.5ns (1500ps)
+mask_H = lambda numpy_arr: np.logical_and(numpy_arr[:, 0] < 13.9, numpy_arr[:, 0] > 12)
+mask_V = lambda numpy_arr: np.logical_and(numpy_arr[:, 0] < 19, numpy_arr[:, 0] > 16)
+
+print(f"num H_arr bins to integrate = {np.sum(H_arr[mask_H(H_arr), 1] > 3e3)}")
+# print(H_arr[mask_H(H_arr), 1])
+print(f"num V_arr bins to integrate = {np.sum(V_arr[mask_V(V_arr), 1] > 3e3)}")
+# print(V_arr[mask_V(V_arr), 1])
 plt.figure()
-plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
-plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
+# plt.bar(H_arr[mask_H(H_arr), 0], H_arr[mask_H(H_arr), 1], label='H mode')
+plt.bar(V_arr[mask_V(V_arr), 0], V_arr[mask_V(V_arr), 1], label='V mode')
 plt.legend()
-plt.xticks([i*20 for i in range((round(H_arr[:, 0][-1]) // 20)+1)])
+# plt.xticks([i*20 for i in range((round(H_arr[:, 0][-1]) // 20)+1)])
 plt.yscale('log')
 plt.savefig('output_fig_log_from_data.png')
 
-plt.figure()
-plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
-plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
-plt.legend()
-plt.savefig('output_fig_linear_from_data.png')
+# plt.figure()
+# plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
+# plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
+# plt.legend()
+# plt.savefig('output_fig_linear_from_data.png')
 
