@@ -54,15 +54,20 @@ slice_number = 40
 mask_H = lambda numpy_arr: np.logical_and(numpy_arr[:, 0] < 13.9, numpy_arr[:, 0] > 12)
 mask_V = lambda numpy_arr: np.logical_and(numpy_arr[:, 0] < 19, numpy_arr[:, 0] > 16)
 
-print(f"num H_arr bins to integrate = {np.sum(H_arr[mask_H(H_arr), 1] > 3e3)}")
-# print(H_arr[mask_H(H_arr), 1])
-print(f"num V_arr bins to integrate = {np.sum(V_arr[mask_V(V_arr), 1] > 3e3)}")
-# print(V_arr[mask_V(V_arr), 1])
+# print(f"num H_arr bins to integrate = {np.sum(H_arr[mask_H(H_arr), 1] > 4e3)}")
+# # print(H_arr[mask_H(H_arr), 1])
+# print(f"num V_arr bins to integrate = {np.sum(V_arr[mask_V(V_arr), 1] > 4e3)}")
+# # print(V_arr[mask_V(V_arr), 1])
+# plt.figure()
+# # plt.bar(H_arr[mask_H(H_arr), 0], H_arr[mask_H(H_arr), 1], label='H mode')
+# plt.bar(V_arr[mask_V(V_arr), 0], V_arr[mask_V(V_arr), 1], label='V mode')
+# plt.legend()
+# # plt.xticks([i*20 for i in range((round(H_arr[:, 0][-1]) // 20)+1)])
 plt.figure()
-# plt.bar(H_arr[mask_H(H_arr), 0], H_arr[mask_H(H_arr), 1], label='H mode')
-plt.bar(V_arr[mask_V(V_arr), 0], V_arr[mask_V(V_arr), 1], label='V mode')
-plt.legend()
-# plt.xticks([i*20 for i in range((round(H_arr[:, 0][-1]) // 20)+1)])
+# plt.bar(H_arr[H_arr[:,0] < 25, 0], H_arr[H_arr[:,0] < 25, 1], label='H mode')
+# plt.bar(V_arr[V_arr[:,0] < 25, 0], V_arr[V_arr[:,0] < 25, 1], label='V mode')
+plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
+plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
 plt.yscale('log')
 plt.savefig('output_fig_log_from_data.png')
 
@@ -71,4 +76,17 @@ plt.savefig('output_fig_log_from_data.png')
 # plt.bar(V_arr[:, 0], V_arr[:, 1], label='V mode')
 # plt.legend()
 # plt.savefig('output_fig_linear_from_data.png')
+
+
+for nstep_walk in range(1, 11):
+    walk_shift = lambda nstep: (50 * nstep) + 12
+
+    for mode in [H_arr, V_arr]:
+        mask_arr = np.logical_and(
+            mode[:, 0] > walk_shift(nstep_walk-1),
+            mode[:, 0] < walk_shift(nstep_walk)
+        )
+
+        
+
 
