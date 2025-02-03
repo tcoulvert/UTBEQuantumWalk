@@ -75,35 +75,60 @@ qw_windows = [(0, 50), (50, 90), (100, 140), (150, 190), (200, 240), (250, 290),
 
 
 def find_local_max(qw_idx, arr):
-    noise_floor = 3.5e3
-
+    noise_floor = 2.95e3
     qw_window_bool = np.logical_and(arr[:, 0] > qw_windows[qw_idx][0], arr[:, 0] < qw_windows[qw_idx][1])
 
-    arr[qw_window_bool, 1]
+    sub_array = arr[:, 1]
+    local_max_idxs = []
+    found_this_timebin_max = False
+
+    for timestep in range(1, len(sub_array) - 1):
+
+        if not qw_window_bool[timestep]:
+            continue
+
+        if len(local_max_idxs) == qw_idx+1:
+            break
+
+        if (
+            len(local_max_idxs) > 0
+            and len(local_max_idxs) <= qw_idx
+            and timestep - local_max_idxs[-1] == 13 
+            and np.all(sub_array[timestep-4:timestep+5] < noise_floor)
+        ):
+            local_max_idxs.append(timestep)
+
+        if (
+            sub_array[timestep] > noise_floor 
+            and sub_array[timestep] > sub_array[timestep-1] 
+            and sub_array[timestep] > sub_array[timestep+1] 
+        ) and not found_this_timebin_max:
+            local_max_idxs.append(timestep)
+            found_this_timebin_max = True
+        elif sub_array[timestep] < noise_floor:
+            found_this_timebin_max = False
+
+    return local_max_idxs
+
 
 nstep_walks_arr_of_dicts = []
 for nstep_walk in range(1, 11):
     nstep_walks_arr_of_dicts.append({})
 
-    walk_shift = lambda nstep, mode_name: (50 * nstep) + (12.65 if mode_name == 'H' else 16.85)
-
     for mode_name, mode in [('H', H_arr), ('V', V_arr)]:
-        mask_arr = np.logical_and(
-            mode[:, 0] > walk_shift(nstep_walk-1, mode_name),
-            mode[:, 0] < walk_shift(nstep_walk, mode_name)
-        )
+        local_maxima = find_local_max(nstep_walk-1, mode)
+        print(local_maxima)
 
         integrated_timebins = []
-        for timebin in range(nstep_walk+1):
+        for timebin in range(nstep_walk):
             integrated_timebin = np.sum(
-                mode[mask_arr][
-                    15 * timebin : 15 * (timebin + 1)
+                mode[
+                    local_maxima[timebin] - 6 : local_maxima[timebin] + 7
                 ]
             )
             integrated_timebins.append(integrated_timebin)
 
         normalized_timebins = [float(timebin / np.sum(integrated_timebins)) for timebin in integrated_timebins]
-
         nstep_walks_arr_of_dicts[-1][mode_name] = normalized_timebins
 
     plot_destdir = os.path.join(str(Path().absolute()), f'new_plots/theta{BS1_scheduler(-1):.2f}_gamma0.0/nsteps{nstep_walk}/')
