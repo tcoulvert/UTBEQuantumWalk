@@ -51,15 +51,16 @@ V_arr = np.loadtxt("hardware_output/slowAxisHistogram.csv", delimiter=",")
 qw_windows = [(0, 50), (50, 90), (100, 140), (150, 190), (200, 240), (250, 290), (300, 340), (350, 390), (400, 440), (450, 490)]
 
 # time-bin window = 0.65ns (650ps), time steps of 0.05ns (50ps) -> 13 timesteps per timebin
-# mask_HV = lambda numpy_arr, low, high: np.logical_and(numpy_arr[:, 0] > low, numpy_arr[:, 0] < high)
+mask_HV = lambda numpy_arr, low, high: np.logical_and(numpy_arr[:, 0] > low, numpy_arr[:, 0] < high)
 
-# for step_i, (low, high) in enumerate(qw_windows):
-#     plt.figure()
-#     plt.bar(H_arr[mask_HV(H_arr, low, high), 0], H_arr[mask_HV(H_arr, low, high), 1], label='H mode')
-#     plt.bar(V_arr[mask_HV(H_arr, low, high), 0], V_arr[mask_HV(H_arr, low, high), 1], label='V mode')
-#     plt.legend()
-#     plt.yscale('log')
-#     plt.savefig(f'output_data_step{step_i}.png')
+for step_i, (low, high) in enumerate(qw_windows):
+    plt.figure()
+    plt.bar(H_arr[mask_HV(H_arr, low, high), 0], H_arr[mask_HV(H_arr, low, high), 1], label='H mode')
+    plt.bar(V_arr[mask_HV(V_arr, low, high), 0], V_arr[mask_HV(V_arr, low, high), 1], label='V mode')
+    plt.legend()
+    plt.hlines([np.mean(H_arr[mask_HV(H_arr, low, high), 1][:100]), np.mean(V_arr[mask_HV(V_arr, low, high), 1][:100])], [low, low], [high, high], label=['H noise floor', 'V noise floor'])
+    plt.yscale('log')
+    plt.savefig(f'output_data_step{step_i+1}.png')
 
 # plt.figure()
 # plt.bar(H_arr[:, 0], H_arr[:, 1], label='H mode')
@@ -75,61 +76,61 @@ qw_windows = [(0, 50), (50, 90), (100, 140), (150, 190), (200, 240), (250, 290),
 
 
 def find_local_max(qw_idx, arr):
-    noise_floor = 2.95e3
+   
     qw_window_bool = np.logical_and(arr[:, 0] > qw_windows[qw_idx][0], arr[:, 0] < qw_windows[qw_idx][1])
+    noise_floor, noise_std = np.mean(arr[qw_window_bool, 1][:100]), 5*np.std(arr[qw_window_bool, 1][:100])
 
     sub_array = arr[:, 1]
-    local_max_idxs = []
-    found_this_timebin_max = False
+    local_max_idxs = [0 for _ in range(qw_idx+2)]
 
     for timestep in range(1, len(sub_array) - 1):
-
         if not qw_window_bool[timestep]:
             continue
 
-        if len(local_max_idxs) == qw_idx+1:
+        if (
+            sub_array[timestep] > noise_floor+noise_std
+            and sub_array[timestep] > sub_array[timestep-1]
+            and sub_array[timestep] > sub_array[timestep+1]
+        ):
+            local_max_idxs[0] = timestep
             break
 
-        if (
-            len(local_max_idxs) > 0
-            and len(local_max_idxs) <= qw_idx
-            and timestep - local_max_idxs[-1] == 13 
-            and np.all(sub_array[timestep-4:timestep+5] < noise_floor)
-        ):
-            local_max_idxs.append(timestep)
+    for timebin in range(1, qw_idx+2):
+        local_max_idxs[timebin] = local_max_idxs[0] + (timebin * (29 if timebin%4 != 0 else 30))
 
-        if (
-            sub_array[timestep] > noise_floor 
-            and sub_array[timestep] > sub_array[timestep-1] 
-            and sub_array[timestep] > sub_array[timestep+1] 
-        ) and not found_this_timebin_max:
-            local_max_idxs.append(timestep)
-            found_this_timebin_max = True
-        elif sub_array[timestep] < noise_floor:
-            found_this_timebin_max = False
-
-    return local_max_idxs
+    return local_max_idxs, noise_floor, noise_std
 
 
 nstep_walks_arr_of_dicts = []
 for nstep_walk in range(1, 11):
     nstep_walks_arr_of_dicts.append({})
 
+
+    plt.figure()
     for mode_name, mode in [('H', H_arr), ('V', V_arr)]:
-        local_maxima = find_local_max(nstep_walk-1, mode)
-        print(local_maxima)
+        local_maxima, noise_floor, noise_std = find_local_max(nstep_walk-1, mode)
 
         integrated_timebins = []
-        for timebin in range(nstep_walk):
+        for timebin in range(nstep_walk+1):
             integrated_timebin = np.sum(
                 mode[
                     local_maxima[timebin] - 6 : local_maxima[timebin] + 7
                 ]
-            )
+            ) - np.sum([noise_floor for _ in range(13)])
+            integrated_timebin = integrated_timebin if integrated_timebin > 0 else 0
             integrated_timebins.append(integrated_timebin)
 
         normalized_timebins = [float(timebin / np.sum(integrated_timebins)) for timebin in integrated_timebins]
         nstep_walks_arr_of_dicts[-1][mode_name] = normalized_timebins
+
+        
+        plt.bar(mode[mask_HV(mode, qw_windows[nstep_walk-1][0], qw_windows[nstep_walk-1][1]), 0], mode[mask_HV(mode, qw_windows[nstep_walk-1][0], qw_windows[nstep_walk-1][1]), 1], label=mode_name+' mode')
+        plt.vlines([mode[:, 0][local_max] for local_max in local_maxima], [0 for _ in local_maxima], [np.max(mode[mask_HV(mode, qw_windows[nstep_walk-1][0], qw_windows[nstep_walk-1][1]), 1]) for _ in local_maxima], label=['local max' for local_max in local_maxima], color=['black' for local_max in local_maxima])
+        # plt.vlines([mode[:, 0][local_max-6] for local_max in local_maxima], [0 for _ in local_maxima], [np.max(mode[mask_HV(mode, qw_windows[nstep_walk-1][0], qw_windows[nstep_walk-1][1]), 1]) for _ in local_maxima], color=['red' for local_max in local_maxima])
+        # plt.vlines([mode[:, 0][local_max+6] for local_max in local_maxima], [0 for _ in local_maxima], [np.max(mode[mask_HV(mode, qw_windows[nstep_walk-1][0], qw_windows[nstep_walk-1][1]), 1]) for _ in local_maxima], color=['blue' for local_max in local_maxima])
+    plt.legend()
+    plt.yscale('log')
+    plt.savefig(f'output_data_step{nstep_walk}_integrated.png')
 
     plot_destdir = os.path.join(str(Path().absolute()), f'new_plots/theta{BS1_scheduler(-1):.2f}_gamma0.0/nsteps{nstep_walk}/')
     if not os.path.exists(plot_destdir):
