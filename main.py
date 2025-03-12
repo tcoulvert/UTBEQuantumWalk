@@ -27,15 +27,16 @@ def utbe_plot_list(oneFolds_ideal, plot_destdir, postfix='', yerr=None, labels=N
     plt.close()
     
 def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix='', log=False):
+    sorted_oneFolds = sort_output_dict(oneFolds_ideal)
     fig, ax = plt.subplots(figsize = (12,8))
     ax.bar(
-       np.arange(len(oneFolds_ideal))+0.1, 
-       oneFolds_ideal.values(), 
+       np.arange(len(sorted_oneFolds))+0.1, 
+       sorted_oneFolds.values(), 
        color='tab:blue', width=0.2
     )
-    ax.set_xticks(range(len(oneFolds_ideal)))
-    ax.set_xticklabels(list(oneFolds_ideal.keys()), rotation=65)
-    plt.title('Walk output')
+    ax.set_xticks(range(len(sorted_oneFolds)))
+    ax.set_xticklabels([f"t{i}" for i in sorted_oneFolds.keys()], rotation=65)
+    plt.title(f'Walk output - Step {len(sorted_oneFolds)-1}')
     plt.ylabel('Probability')
     plt.xlabel('Detection outcome (t0,t1,t2,...)')
     if log:
@@ -44,6 +45,15 @@ def utbe_plot_dict(oneFolds_ideal, plot_destdir, postfix='', log=False):
     plt.tight_layout()
     plt.savefig(os.path.join(plot_destdir, f'output{"_"+postfix if postfix != "" else ""}.png'))
     plt.close()
+
+def sort_output_dict(photon_outcomes_dict):
+    sorted_outcomes_dict = {i: 0. for i in range(len(photon_outcomes_dict))}
+    for key, value in photon_outcomes_dict.items():
+        nonzero_index = np.nonzero(key)[0][0]
+        sorted_outcomes_dict[nonzero_index] = value
+
+    print(sorted_outcomes_dict)
+    return sorted_outcomes_dict
 
 
 def generate_photon_outcomes(N, max_photons=2):
